@@ -21,6 +21,8 @@ import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import org.springframework.beans.factory.annotation.Value;
+
 
 import javax.jms.ConnectionFactory;
 import java.io.File;
@@ -28,6 +30,11 @@ import java.util.TimeZone;
 
 import static com.google.common.base.Predicates.not;
 import static springfox.documentation.builders.PathSelectors.regex;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQDestination;
+
+
 
 @SpringBootApplication
 @EnableJms
@@ -39,6 +46,28 @@ public class Application {
 	private static ConfigurableApplicationContext context;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
+
+	// public ActiveMQDestination destination = new ActiveMQDestination("default.traceability"){
+		
+	// 	@Override
+	// 	public byte getDataStructureType() {
+	// 		return 0;
+	// 	}
+	
+	// 	@Override
+	// 	protected String getQualifiedPrefix() {
+	// 		return null;
+	// 	}
+	
+	// 	@Override
+	// 	public byte getDestinationType() {
+	// 		return 0;
+	// 	}
+	// };
+
+	public ActiveMQDestination destination = ActiveMQDestination.createDestination("default.traceability", ActiveMQDestination.QUEUE_TYPE);
+
+	public ActiveMQDestination[] destinations = new ActiveMQDestination[1];
 
 	public static void main(String[] args) throws LogLoaderException {
 
@@ -59,12 +88,24 @@ public class Application {
 	}
 
 	@Bean
-	public JmsListenerContainerFactory<?> jmsListenerContainerFactory(ConnectionFactory connectionFactory, DefaultJmsListenerContainerFactoryConfigurer configurer) {
+    public BrokerService broker() throws Exception {
+		destinations[0] = destination;
+        BrokerService broker = new BrokerService();
+		broker.addConnector("stomp://localhost:61613");
+		// destination.setCompositeDestinations(destinations);
+		broker.setDestinations(destinations);
+        return broker;
+    }
+
+	@Bean
+	public JmsListenerContainerFactory<?> jmsListenerContainerFactory(ConnectionFactory connectionFactory,
+			DefaultJmsListenerContainerFactoryConfigurer configurer) {
 		DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
 		factory.setErrorHandler(t -> logger.error("Failed to consume message.", t));
 		configurer.configure(factory, connectionFactory);
 		return factory;
 	}
+
 
 	@Bean
 	public ObjectMapper objectMapper() {
@@ -79,12 +120,8 @@ public class Application {
 
 	@Bean
 	public Docket api() {
-		return new Docket(DocumentationType.SWAGGER_2)
-						.select()
-						.apis(RequestHandlerSelectors.any())
-						.paths(not(regex("/")))
-						.paths(not(regex("/error")))
-						.build();
+		return new Docket(DocumentationType.SWAGGER_2).select().apis(RequestHandlerSelectors.any())
+				.paths(not(regex("/"))).paths(not(regex("/error"))).build();
 	}
 
 	protected static ConfigurableApplicationContext getContext() {
