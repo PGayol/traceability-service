@@ -8,6 +8,8 @@ import org.ihtsdo.otf.traceabilityservice.domain.Branch;
 import org.ihtsdo.otf.traceabilityservice.domain.ConceptChange;
 import org.ihtsdo.otf.traceabilityservice.repository.ActivityRepository;
 import org.ihtsdo.otf.traceabilityservice.repository.BranchRepository;
+import org.ihtsdo.otf.traceabilityservice.service.TraceabilityStreamConsumer;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -85,6 +87,7 @@ public class ActivityController {
 			}
 		}
 	}
+
 
 	@RequestMapping(value="/activities/promotions", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public Page<Activity> getPromotions(@RequestParam String sourceBranch, Pageable page) {
