@@ -23,8 +23,8 @@ public class PostMessageController {
 	@Autowired
 	private TraceabilityStreamConsumer traceabilityStreamConsumer;
 
-	@RequestMapping(value = "/activities/postMessage", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	public MessageCreator postMessage(@RequestParam String message) throws LogLoaderException {
+	@RequestMapping(value = "/activities/postMessage", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public String postMessage(@RequestParam String message) throws LogLoaderException {
 		// traceabilityStreamConsumer.receiveMessage(message);
 		// return "Posted:" + message;
 
@@ -35,7 +35,8 @@ public class PostMessageController {
 		MessageCreator messageCreator = session -> session.createTextMessage(message+'\n');
 		jmsTemplate.send(destinationName, messageCreator);
 
-		return messageCreator;
+		// return messageCreator;
+		return message;
 	}
 
 }
